@@ -1,0 +1,122 @@
+//=============================================================================
+// BEHAVIOR DEFINITION: ZI_DERS_UserPerm
+// TYPE: Managed (Admin-only)
+// PURPOSE: User permission management for report access
+//
+// BUSINESS PURPOSE:
+// - Allow admin to manually grant/revoke user permissions for specific reports
+// - Override default permissions from role assignment
+// - Control can_export and can_subscribe flags per user/report/company
+//
+// AUTHORIZATION: Global (admin only via Z_DERS_ADM)
+// - Only administrators can create/update/delete user permissions
+// - Regular users cannot modify permissions
+//
+// PREREQUISITES:
+// - Authorization object Z_DERS_ADM must exist
+// - CDS View ZI_DERS_UserPerm must exist
+// - Table ZDERS_USER_PERM must exist
+//=============================================================================
+managed implementation in class ZBP_I_DERS_USERPERM unique;
+strict ( 2 );
+with draft;
+
+define behavior for ZI_DERS_UserPerm alias UserPerm
+persistent table zders_user_perm
+draft table zders_d_usrprm
+lock master total etag ChangedAt
+authorization master ( global )
+etag master ChangedAt
+{
+  // ─────────────────────────────────────────────────────────────────────────
+  // Standard CRUD Operations (Admin Only)
+  // ─────────────────────────────────────────────────────────────────────────
+  create;
+  update;
+  delete;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Field Control - ReadOnly (System-managed fields)
+  // ─────────────────────────────────────────────────────────────────────────
+  field ( readonly )
+    CreatedBy,
+    CreatedAt,
+    ChangedBy,
+    ChangedAt,
+    PermTypeText,
+    StatusCriticality;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Field Control - Mandatory
+  // ─────────────────────────────────────────────────────────────────────────
+  field ( mandatory )
+    UserId,
+    ReportId,
+    Bukrs;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Determinations
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // When admin creates a permission, set perm_type = 'O' (Override)
+  // This distinguishes admin-created from role-default permissions
+  determination setOverrideType on modify { create; }
+
+  // Set default values (is_active = 'X', etc.)
+  determination setDefaults on modify { create; }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Draft Actions
+  // ─────────────────────────────────────────────────────────────────────────
+  draft action Edit;
+  draft action Activate;
+  draft action Discard;
+  draft action Resume;
+  draft determine action Prepare
+  {
+    validation validateUserExists;
+    validation validateReportExists;
+    validation validateCompanyExists;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Validations
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // Validate that UserId exists in SAP user master (USR02)
+  validation validateUserExists on save { create; field UserId; }
+
+  // Validate that ReportId exists in ZDERS_CATALOG and is active
+  validation validateReportExists on save { create; field ReportId; }
+
+  // Validate that Bukrs exists in T001
+  validation validateCompanyExists on save { create; field Bukrs; }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Actions
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // Deactivate permission (soft disable)
+  action ( features : instance ) deactivate result [1] $self;
+
+  // Reactivate permission
+  action ( features : instance ) reactivate result [1] $self;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Mapping (CDS field → DB field)
+  // ─────────────────────────────────────────────────────────────────────────
+  mapping for zders_user_perm corresponding
+  {
+    UserId       = user_id;
+    ReportId     = report_id;
+    Bukrs        = bukrs;
+    CanExport    = can_export;
+    CanSubscribe = can_subscribe;
+    PermType     = perm_type;
+    IsActive     = is_active;
+    CreatedBy    = created_by;
+    CreatedAt    = created_at;
+    ChangedBy    = changed_by;
+    ChangedAt    = changed_at;
+  }
+}

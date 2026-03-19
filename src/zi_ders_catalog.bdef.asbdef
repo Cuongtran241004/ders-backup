@@ -1,0 +1,228 @@
+//=============================================================================
+// BEHAVIOR DEFINITION: ZI_DERS_Catalog
+// TYPE: Managed with Draft
+// PURPOSE: Report Catalog Business Object behavior
+// CHILDREN: ZI_DERS_Parameter
+//
+// PREREQUISITES (must create before activating this BDEF):
+//   1. Draft table ZDERS_D_CATALOG must exist
+//   2. Draft table ZDERS_D_PARAM must exist
+//   3. Abstract entity ZA_DERS_CreateFromTemplate must exist
+//=============================================================================
+
+managed implementation in class ZBP_I_DERS_CATALOG unique;
+strict ( 2 );
+with draft;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ROOT ENTITY: Report Catalog
+// ═══════════════════════════════════════════════════════════════════════════
+define behavior for ZI_DERS_Catalog alias Catalog
+persistent table zders_catalog
+draft table zders_d_catalog
+etag master ChangedAt
+lock master total etag ChangedAt
+authorization master ( global )
+
+{
+  // ─────────────────────────────────────────────────────────────────────────
+  // Standard CRUD Operations
+  // ─────────────────────────────────────────────────────────────────────────
+  create;
+  update;
+  delete;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Field Control - ReadOnly
+  // Các field tự động sinh hoặc tính toán
+  // ─────────────────────────────────────────────────────────────────────────
+  field ( readonly )
+    CreatedBy,
+    CreatedAt,
+    ChangedBy,
+    ChangedAt,
+    ActiveCriticality,
+    SupportsExcel,
+    SupportsPdf;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Field Control - Mandatory
+  // Các field bắt buộc nhập
+  // ─────────────────────────────────────────────────────────────────────────
+  field ( mandatory )
+    ReportId,
+    ModuleId,
+    ReportName,
+    CdsViewName;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Validations - Chạy trước khi save
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // Validate module exists và active trong value table
+  validation validateModule on save { create; update;
+    field ModuleId; }
+
+  // Validate CDS view tồn tại trong DDIC
+  validation validateCdsView on save { create; update;
+    field CdsViewName; }
+
+  // Validate format string hợp lệ (XLSX,PDF,CSV)
+  validation validateFormats on save { create; update;
+    field SupportedFormats; }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Determinations - Tự động fill giá trị
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // Set default values khi create (IsActive=true, MaxRows=100000, etc.)
+  determination setDefaults on modify { create; }
+
+  // Tính toán derived fields (SupportsExcel, SupportsPdf)
+  determination calculateDerivedFields on modify { create; update;
+    field SupportedFormats; }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Instance Actions
+  // NOTE: "activate" is reserved - use "activateReport" instead
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // Kích hoạt report - cho phép users export/subscribe
+  action ( features : instance ) activateReport result [1] $self;
+
+  // Vô hiệu hóa report - ẩn khỏi users
+  action ( features : instance ) deactivateReport result [1] $self;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Static Actions
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // Tạo report mới từ template có sẵn
+  static action createFromTemplate parameter ZA_DERS_CreateFromTemplate
+    result [1] $self;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Draft Actions (Standard RAP Draft)
+  // ─────────────────────────────────────────────────────────────────────────
+  draft action Edit;
+  draft action Activate;
+  draft action Discard;
+  draft action Resume;
+  draft determine action Prepare
+  {
+    validation validateModule;
+    validation validateCdsView;
+    validation validateFormats;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Child Association
+  // ─────────────────────────────────────────────────────────────────────────
+  association _Parameters { create; with draft; }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Field Mapping: CDS View Field → Database Table Column
+  // ─────────────────────────────────────────────────────────────────────────
+  mapping for zders_catalog corresponding
+  {
+    ReportId          = report_id;
+    ModuleId          = module_id;
+    TargetRole        = target_role;
+    ReportName        = report_name;
+    Description       = description;
+    CdsViewName       = cds_view_name;
+    SupportedFormats  = supported_formats;
+    MaxRows           = max_rows;
+    EstimatedRuntime  = estimated_runtime;
+    IsActive          = is_active;
+    CreatedBy         = created_by;
+    CreatedAt         = created_at;
+    ChangedBy         = changed_by;
+    ChangedAt         = changed_at;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CHILD ENTITY: Report Parameters
+// ═══════════════════════════════════════════════════════════════════════════
+define behavior for ZI_DERS_Parameter alias Parameter
+persistent table zders_param
+draft table zders_d_param
+etag master ChangedAt
+lock dependent by _Catalog
+authorization dependent by _Catalog
+
+{
+  // Child chỉ có update/delete, create thông qua parent
+  update;
+  delete;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Field Control
+  // ─────────────────────────────────────────────────────────────────────────
+  field ( readonly )
+    ReportId,            // Key - từ parent
+    ParamSeq,            // Key - auto-generated sequence
+    CreatedBy,
+    CreatedAt,
+    ChangedBy,
+    ChangedAt,
+    ParamTypeText;       // Derived field
+
+  field ( mandatory )
+    ParamName,
+    ParamLabel,
+    DataElement;
+
+  // NOTE: Removed "field ( numbering : managed ) ParamSeq"
+  // because ParamSeq type (INT1/INT2) is not compatible with managed numbering
+  // ParamSeq should be set via determination or user input
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Validations
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // Validate param type là S/R/M
+  validation validateParamType on save { create; update;
+    field ParamType; }
+
+  // Validate data element tồn tại trong DDIC
+  validation validateDataElement on save { create; update;
+    field DataElement; }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Determinations
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // Default ParamType = 'S' (Single)
+  determination setDefaultParamType on modify { create; }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Association to Parent
+  // ─────────────────────────────────────────────────────────────────────────
+  association _Catalog { with draft; }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Mapping
+  // ─────────────────────────────────────────────────────────────────────────
+  mapping for zders_param corresponding
+  {
+    ReportId      = report_id;
+    ParamSeq      = param_seq;
+    ParamName     = param_name;
+    ParamLabel    = param_label;
+    ParamType     = param_type;
+    DataElement   = data_element;
+    IsMandatory   = is_mandatory;
+    DefaultValue  = default_value;
+    MinValue      = min_value;
+    MaxValue      = max_value;
+    AuthObject    = auth_object;
+    AuthField     = auth_field;
+    F4CdsView          = f4_cds_view;
+    CreatedBy          = created_by;
+    CreatedAt          = created_at;
+    ChangedBy          = changed_by;
+    ChangedAt          = changed_at;
+  }
+}

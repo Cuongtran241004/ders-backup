@@ -1,0 +1,5 @@
+@EndUserText.label: 'AP01 Vendor Open Item Service'
+define service ZUI_DERS_AP01 {
+  expose ZC_DERS_AP01;
+  expose ZC_DERS_AP01_ITEM;
+}

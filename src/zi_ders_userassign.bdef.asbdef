@@ -1,0 +1,97 @@
+//=============================================================================
+// BEHAVIOR DEFINITION: ZI_DERS_UserAssign
+// TYPE: Managed (Admin-only)
+// PURPOSE: User-Company Code assignment management
+//
+// AUTHORIZATION: Global (admin only)
+// - Only users with Z_DERS_ADM authorization can create/update/delete
+// - Regular users cannot modify user assignments
+//
+// PREREQUISITES:
+// - Authorization object Z_DERS_ADM must exist
+// - CDS View ZI_DERS_UserAssign must exist
+//=============================================================================
+managed implementation in class ZBP_I_DERS_USERASSIGN unique;
+strict ( 2 );
+with draft;
+
+define behavior for ZI_DERS_UserAssign alias UserAssign
+persistent table zders_uassign
+draft table zders_d_uassign
+lock master total etag ChangedAt
+authorization master ( global )
+etag master ChangedAt
+{
+  // ─────────────────────────────────────────────────────────────────────────
+  // Standard CRUD Operations (Admin Only)
+  // ─────────────────────────────────────────────────────────────────────────
+  create;
+  update;
+  delete;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Field Control - ReadOnly
+  // ─────────────────────────────────────────────────────────────────────────
+  field ( readonly )
+    CreatedBy,
+    CreatedAt,
+    ChangedBy,
+    ChangedAt,
+    StatusCriticality;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Field Control - Mandatory
+  // ─────────────────────────────────────────────────────────────────────────
+  field ( mandatory )
+    UserId,
+    Bukrs;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Determinations
+  // ─────────────────────────────────────────────────────────────────────────
+  determination setDefaults on modify { create; }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Draft Actions
+  // ─────────────────────────────────────────────────────────────────────────
+  draft action Edit;
+  draft action Activate;
+  draft action Discard;
+  draft action Resume;
+  draft determine action Prepare
+  {
+    validation validateUser;
+    validation validateCompanyCode;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Validations
+  // ─────────────────────────────────────────────────────────────────────────
+  validation validateUser on save { create; update; field UserId; }
+  validation validateCompanyCode on save { create; update; field Bukrs; }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Actions
+  // ─────────────────────────────────────────────────────────────────────────
+  action ( features : instance ) deactivate result [1] $self;
+  action ( features : instance ) reactivate result [1] $self;
+
+  // Auto-generate user permissions based on business role assignment
+  // Copies can_export/can_subscribe from ZDERS_ROLE_PERM where is_default = 'X'
+  action generatePermissions;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Mapping
+  // ─────────────────────────────────────────────────────────────────────────
+  mapping for zders_uassign corresponding
+  {
+    UserId       = user_id;
+    Bukrs        = bukrs;
+    BusinessRole = business_role;
+    IsActive     = is_active;
+    CreatedBy    = created_by;
+    CreatedAt    = created_at;
+    ChangedBy    = changed_by;
+    ChangedAt    = changed_at;
+  }
+}

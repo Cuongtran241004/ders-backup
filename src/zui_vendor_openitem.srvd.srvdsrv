@@ -1,0 +1,4 @@
+define service ZUI_VENDOR_OPENITEM {
+  expose ZC_VendorOpenItem as VendorOpenItem;
+  expose ZC_ExcelStore as ExcelStore;
+}

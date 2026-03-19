@@ -1,0 +1,265 @@
+//=============================================================================
+// BEHAVIOR DEFINITION: ZI_DERS_JobHistory
+// TYPE: Managed (no draft - system-generated records)
+// PURPOSE: Job Execution History - read-only with actions
+// NOTE: Separate from Subscription BDEF because:
+//   1. Records created by background job scheduler
+//   2. Independent lifecycle
+//   3. Needs own actions (retry, cancelJob)
+//=============================================================================
+
+managed implementation in class ZBP_I_DERS_JOBHISTORY unique;
+strict ( 2 );
+// NO DRAFT - JobHistory records are system-generated, not user-edited
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ROOT ENTITY: Job History
+// ═══════════════════════════════════════════════════════════════════════════
+define behavior for ZI_DERS_JobHistory alias JobHistory
+persistent table zders_jobhist
+lock master
+authorization master ( instance )
+etag master LastChangedAt
+
+{
+  // ─────────────────────────────────────────────────────────────────────────
+  // NO standard CRUD for users
+  // Records created internally by background job scheduler
+  // ─────────────────────────────────────────────────────────────────────────
+  internal create;
+  internal update;
+  // NO delete - job history kept for audit
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Field Control - All readonly (system-managed)
+  // ─────────────────────────────────────────────────────────────────────────
+  field ( readonly )
+    JobUuid,
+    JobId,
+    JobType,
+    SourceUuid,
+    ReportId,
+    UserId,
+    Bukrs,
+    Status,
+    StatusCriticality,
+    ScheduledTs,
+    StartedTs,
+    CompletedTs,
+    RowsProcessed,
+    FileUuid,
+    ErrorMessage,
+    ErrorCode,
+    CreatedBy,
+    CreatedAt,
+    LastChangedBy,
+    LastChangedAt,
+    LocalLastChangedAt;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Key Numbering
+  // ─────────────────────────────────────────────────────────────────────────
+  field ( numbering : managed )
+    JobUuid;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Instance Actions (user-triggered on existing records)
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // Retry failed job (creates new job with same parameters)
+  // Precondition: Status = 'F' (Failed)
+  action ( features : instance ) retry result [1] $self;
+
+  // Cancel running/scheduled job
+  // Precondition: Status IN ('S', 'R') - Scheduled or Running
+  action ( features : instance ) cancelJob result [1] $self;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Associations
+  // ─────────────────────────────────────────────────────────────────────────
+  association _Parameters { create; }
+  association _File { create; }
+  association _Subscription;
+  association _Catalog;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Mapping
+  // ─────────────────────────────────────────────────────────────────────────
+  mapping for zders_jobhist corresponding
+  {
+    JobUuid             = job_uuid;
+    JobId               = job_id;
+    JobType             = job_type;
+    SourceUuid          = source_uuid;
+    ReportId            = report_id;
+    UserId              = user_id;
+    Bukrs               = bukrs;
+    ParamJson           = param_json;
+    OutputFormat        = output_format;
+    Status              = status;
+    ScheduledTs         = scheduled_ts;
+    StartedTs           = started_ts;
+    CompletedTs         = completed_ts;
+    RowsProcessed       = rows_processed;
+    FileUuid            = file_uuid;
+    ErrorMessage        = error_message;
+    ErrorCode           = error_code;
+    BgJobName           = bg_job_name;
+    BgJobCount          = bg_job_count;
+    JobTemplateName     = job_template_name;
+    RunType             = run_type;
+    StartImmediately    = start_immediately;
+    StartTimestamp      = start_timestamp;
+    IsPeriodic          = is_periodic;
+    PeriodicGranularity = periodic_granularity;
+    PeriodicValue       = periodic_value;
+    Tmzone              = tmzone;
+    Priority            = priority;
+    RetryOfJob          = retry_of_job;
+    RetryCount          = retry_count;
+    EmailSent           = email_sent;
+    EmailSentTs         = email_sent_ts;
+    IsArchived          = is_archived;
+    ArchivedDate        = archived_date;
+    RetentionUntil      = retention_until;
+    CreatedBy           = created_by;
+    CreatedAt           = created_at;
+    LastChangedBy       = last_changed_by;
+    LastChangedAt       = last_changed_at;
+    LocalLastChangedAt  = local_last_changed_at;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CHILD ENTITY: Job Parameters (Read-Only Snapshot)
+// Created internally when job is scheduled
+// ═══════════════════════════════════════════════════════════════════════════
+define behavior for ZI_DERS_JobParam alias JobParam
+persistent table zders_job_param
+lock dependent by _JobHistory
+authorization dependent by _JobHistory
+etag master LastChangedAt
+
+{
+  // NO direct CRUD - create via parent association _Parameters
+  // Records are created internally by background job scheduler
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Field Control - All readonly
+  // ─────────────────────────────────────────────────────────────────────────
+  field ( readonly )
+    JobParamUuid,
+    ParentUuid,
+    ItemNo,
+    ParamName,
+    ParamLabel,
+    ParamValueFrom,
+    ParamValueTo,
+    ParamType,
+    DisplayValue,
+    DataElement,
+    CreatedBy,
+    CreatedAt,
+    LastChangedBy,
+    LastChangedAt,
+    LocalLastChangedAt;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Key Numbering
+  // ─────────────────────────────────────────────────────────────────────────
+  field ( numbering : managed )
+    JobParamUuid;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Associations
+  // ─────────────────────────────────────────────────────────────────────────
+  association _JobHistory;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Mapping
+  // ─────────────────────────────────────────────────────────────────────────
+  mapping for zders_job_param corresponding
+  {
+    JobParamUuid       = job_param_uuid;
+    ParentUuid         = parent_uuid;
+    ItemNo             = item_no;
+    ParamName          = param_name;
+    ParamLabel         = param_label;
+    ParamValueFrom     = param_value_from;
+    ParamValueTo       = param_value_to;
+    ParamType          = param_type;
+    DataElement        = data_element;
+    CreatedBy          = created_by;
+    CreatedAt          = created_at;
+    LastChangedBy      = last_changed_by;
+    LastChangedAt      = last_changed_at;
+    LocalLastChangedAt = local_last_changed_at;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CHILD ENTITY: File Metadata + Content
+// Stores generated file with GZIP compression
+// ═══════════════════════════════════════════════════════════════════════════
+define behavior for ZI_DERS_File alias File
+persistent table zders_file
+lock dependent by _JobHistory
+authorization dependent by _JobHistory
+etag dependent by _JobHistory
+
+{
+  // Create via parent association _File { create; }
+  // NO update - download stats updated via direct DB
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Field Control - All readonly (system-managed)
+  // ─────────────────────────────────────────────────────────────────────────
+  field ( readonly )
+    FileUuid,
+    JobUuid,
+    FileName,
+    FileExtension,
+    FileSizeBytes,
+    FileSizeDisplay,
+    MimeType,
+    FileContent,
+    CompressedSize,
+    IsCompressed,
+    DownloadCount,
+    LastDownloadAt,
+    LastDownloadBy,
+    CreatedAt,
+    CreatedBy;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Key Numbering
+  // ─────────────────────────────────────────────────────────────────────────
+  field ( numbering : managed )
+    FileUuid;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Associations
+  // ─────────────────────────────────────────────────────────────────────────
+  association _JobHistory;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Mapping
+  // ─────────────────────────────────────────────────────────────────────────
+  mapping for zders_file corresponding
+  {
+    FileUuid        = file_uuid;
+    JobUuid         = job_uuid;
+    FileName        = file_name;
+    FileExtension   = file_extension;
+    FileSizeBytes   = file_size_bytes;
+    MimeType        = mime_type;
+    CompressedSize  = compressed_size;
+    IsCompressed    = is_compressed;
+    DownloadCount   = download_count;
+    LastDownloadAt  = last_download_at;
+    LastDownloadBy  = last_download_by;
+    CreatedAt       = created_at;
+    CreatedBy       = created_by;
+    FileContent     = file_content;
+  }
+}

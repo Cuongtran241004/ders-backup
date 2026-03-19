@@ -1,0 +1,4 @@
+@EndUserText.label: 'Excel Report'
+define service ZUI_EXCELSTORE {
+  expose ZI_ExcelStore;
+}

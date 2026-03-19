@@ -1,0 +1,5 @@
+@EndUserText.label: 'SD for Customer Open Items'
+define service ZUI_ders_AR01 {
+  expose ZC_DERS_AR01;
+  expose ZC_DERS_AR01_ITEM;
+}

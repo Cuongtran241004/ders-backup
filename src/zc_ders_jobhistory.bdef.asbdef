@@ -1,0 +1,59 @@
+//=============================================================================
+// PROJECTION BEHAVIOR DEFINITION: ZC_DERS_JobHistory
+// TYPE: Projection Behavior (for JobHistory BO)
+// PURPOSE: UI-specific behavior for Job History, Parameters, and Files
+//
+// NOTE: This is a SEPARATE BO from Subscription
+//       - JobHistory: Read-only + Actions (retry, cancelJob)
+//       - JobParam: Read-only child (snapshot)
+//       - File: Read-only child, download via @Semantics.largeObject ($value endpoint)
+//=============================================================================
+
+projection;
+strict ( 2 );
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ROOT PROJECTION: Job History (Read-only + Actions)
+// ═══════════════════════════════════════════════════════════════════════════
+define behavior for ZC_DERS_JobHistory alias JobHistory
+{
+  // ─────────────────────────────────────────────────────────────────────────
+  // NO CRUD operations - Read-only entity
+  // Jobs are created by system (scheduler/executeNow)
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // Instance Actions (user can trigger these)
+  use action retry;
+  use action cancelJob;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Associations
+  // ─────────────────────────────────────────────────────────────────────────
+  use association _Parameters { create; }
+  use association _File { create; }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CHILD PROJECTION: Job Parameters (Completely Read-only)
+// ═══════════════════════════════════════════════════════════════════════════
+define behavior for ZC_DERS_JobParam alias JobParam
+{
+  // No CRUD, No Actions - purely read-only snapshot
+  // Just navigation back to parent
+  use association _JobHistory;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CHILD PROJECTION: File (Read-only)
+// ═══════════════════════════════════════════════════════════════════════════
+define behavior for ZC_DERS_File alias File
+{
+  // ─────────────────────────────────────────────────────────────────────────
+  // NO CRUD operations, NO ACTIONS - Read-only entity
+  // Download via OData $value endpoint (FileContent has @Semantics.largeObject)
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // Associations - Navigation back to parent
+  // ─────────────────────────────────────────────────────────────────────────
+  use association _JobHistory;
+}

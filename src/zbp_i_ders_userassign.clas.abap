@@ -1,0 +1,5 @@
+CLASS zbp_i_ders_userassign DEFINITION PUBLIC ABSTRACT FINAL FOR BEHAVIOR OF zi_ders_userassign.
+ENDCLASS.
+
+CLASS zbp_i_ders_userassign IMPLEMENTATION.
+ENDCLASS.

@@ -1,0 +1,19 @@
+managed implementation in class zbp_i_excelstore unique;
+strict ( 2 );
+
+define behavior for ZI_ExcelStore alias ExcelStore
+persistent table zders_excelstore
+lock master
+authorization master ( instance )
+{
+  field ( readonly ) file_id;
+
+  // Cho phép hệ thống tự cập nhật timestamp
+  mapping for zders_excelstore {
+    file_id = file_id;
+    attachment = attachment;
+    mimetype = mimetype;
+    filename = filename;
+    last_changed_at = last_changed_at;
+  }
+}

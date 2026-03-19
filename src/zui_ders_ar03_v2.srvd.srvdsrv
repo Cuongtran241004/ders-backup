@@ -1,0 +1,5 @@
+@EndUserText.label: 'ZUI_DERS_AR03_V2'
+define service ZUI_DERS_AR03_V2 {
+  expose ZC_DERS_AR03_V2 as AgingReport;
+  expose I_Customer as Customer;
+}

@@ -1,0 +1,6 @@
+@EndUserText.label: 'Access Control for ZC_DERS_UserPerm'
+@MappingRole: true
+define role ZC_DERS_USERPERM {
+  grant select on ZC_DERS_UserPerm
+  where inheriting conditions from entity ZI_DERS_UserPerm;
+}

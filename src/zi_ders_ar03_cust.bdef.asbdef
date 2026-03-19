@@ -1,0 +1,8 @@
+unmanaged implementation in class zbp_i_ders_ar03_cust unique;
+
+define behavior for ZI_DERS_AR03_CUST alias AgingSummary
+lock master
+{
+  field ( readonly ) CompanyCode, Customer;
+  static action calculateAging parameter ZEA_AR_AGING_PARAM result [1] $self;
+}

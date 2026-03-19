@@ -1,0 +1,12 @@
+//=============================================================================
+// ACCESS CONTROL: ZI_DERS_Catalog
+// PURPOSE: All users can read active reports (no company code restriction)
+// NOTE: Admin-only operations are handled by BDEF global authorization
+//=============================================================================
+@EndUserText.label: 'Access Control for Report Catalog'
+@MappingRole: true
+define role ZI_DERS_CATALOG {
+  grant select on ZI_DERS_Catalog
+  where IsActive = 'X'
+     or IsActive is null;  // Allow reading during draft creation
+}

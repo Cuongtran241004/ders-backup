@@ -1,0 +1,34 @@
+//=============================================================================
+// PROJECTION BEHAVIOR DEFINITION: ZC_DERS_Export
+// TYPE: Projection Behavior (NO Draft - immediate submission)
+// PURPOSE: UI-specific behavior for One-time Export
+// NOTE: Export doesn't use draft - users submit immediately
+//=============================================================================
+
+projection;
+strict ( 2 );
+// NO "use draft" - Export interface BDEF has no draft support
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PROJECTION: One-time Export
+// ═══════════════════════════════════════════════════════════════════════════
+define behavior for ZC_DERS_Export alias Export
+{
+  // ─────────────────────────────────────────────────────────────────────────
+  // Standard Operations (only CREATE - no update/delete per SAD)
+  // ─────────────────────────────────────────────────────────────────────────
+  use create;
+  // NO update - once submitted, export cannot be modified
+  // NO delete - exports are kept for audit trail
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Instance Actions
+  // ─────────────────────────────────────────────────────────────────────────
+  use action execute;
+  use action cancel;
+  use action download;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // NO Draft Actions - Export is immediate submission
+  // ─────────────────────────────────────────────────────────────────────────
+}

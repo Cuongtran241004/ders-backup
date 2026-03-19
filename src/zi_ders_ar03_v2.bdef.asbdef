@@ -1,0 +1,10 @@
+unmanaged implementation in class zbp_i_ders_ar03_v2 unique;
+
+
+define behavior for ZI_DERS_AR03_V2 alias AgingReport
+lock master
+{
+  field ( readonly ) CompanyCode, FiscalYear, AccountingDocument, AccountingDocumentItem;
+
+  static action calculateAging parameter ZEA_AR_AGING_PARAM result [1] $self;
+}

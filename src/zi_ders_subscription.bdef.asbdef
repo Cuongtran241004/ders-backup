@@ -1,0 +1,256 @@
+//=============================================================================
+// BEHAVIOR DEFINITION: ZI_DERS_Subscription
+// TYPE: Managed + Draft (per SAD Section 4.3 & 4.5)
+// PURPOSE: Report Subscription Business Object
+//
+// NOTE: JobHistory and JobParam are now in separate BDEF (zi_ders_jobhistory)
+//       because they have different lifecycle (system-generated records)
+//       and need own actions (retry, cancelJob)
+//
+// PREREQUISITES:
+//   1. Draft table ZDERS_D_SUBSCR must exist
+//=============================================================================
+
+managed implementation in class ZBP_I_DERS_SUBSCRIPTION unique;
+strict ( 2 );
+with draft;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ROOT ENTITY: Subscriptions
+// ═══════════════════════════════════════════════════════════════════════════
+define behavior for ZI_DERS_Subscription alias Subscription
+persistent table zders_subscr
+draft table zders_d_subscr
+etag master LastChangedAt
+lock master total etag LocalLastChangedAt
+authorization master ( instance )
+
+{
+  // ─────────────────────────────────────────────────────────────────────────
+  // Standard CRUD Operations
+  // ─────────────────────────────────────────────────────────────────────────
+  create;
+  update;
+  delete;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Field Control - ReadOnly
+  // ─────────────────────────────────────────────────────────────────────────
+  field ( readonly )
+    SubscrUuid,              // UUID - auto-generated
+    UserId,                  // Auto-set to current user
+    NextRunTs,               // Calculated
+    LastRunTs,               // System-updated
+    RunCount,                // System-updated
+    CreatedBy,
+    CreatedAt,
+    LastChangedBy,
+    LastChangedAt,
+    LocalLastChangedAt,
+    StatusCriticality,       // Derived
+    ScheduleDescription;     // Derived
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Field Control - Mandatory
+  // ─────────────────────────────────────────────────────────────────────────
+  field ( mandatory )
+    SubscrName,
+    ReportId,
+    Bukrs,
+    OutputFormat,
+    Frequency;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Key Numbering
+  // ─────────────────────────────────────────────────────────────────────────
+  field ( numbering : managed )
+    SubscrUuid;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Validations
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // Validate report exists và active
+  validation validateReport on save { create; update;
+    field ReportId; }
+
+  // Validate company code exists (FK to T001)
+  validation validateCompanyCode on save { create; update;
+    field Bukrs; }
+
+  // Validate schedule logic (exec_day valid cho frequency)
+  validation validateSchedule on save { create; update;
+    field Frequency, ExecDay, ExecTime; }
+
+  // Validate email format
+  validation validateEmail on save { create; update;
+    field EmailTo; }
+
+    validation validateReportPermission on save { create;
+    field ReportId, Bukrs; }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Determinations
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // Set default values (Status='A', Timezone=system)
+  determination setDefaults on modify { create; }
+
+  // Set UserId = sy-uname
+  determination setUserId on modify { create; }
+
+  // Calculate next run timestamp based on schedule
+  determination calculateNextRun on modify { create; update;
+    field Frequency, ExecDay, ExecTime, Tmzone; }
+
+  // Auto-populate parameters from ZDERS_PARAM template
+  determination copyParamsFromTemplate on modify { create; update;
+    field ReportId; }
+
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Instance Actions (NOTE: "resume" is reserved, use "resumeSubscription")
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // Tạm dừng subscription (Status → 'P')
+  action ( features : instance ) pause result [1] $self;
+
+  // Tiếp tục subscription đã pause (Status → 'A')
+  action ( features : instance ) resumeSubscription result [1] $self;
+
+  // Chạy ngay lập tức (tạo job immediate)
+  action ( features : instance ) executeNow result [1] $self;
+
+  // Hủy subscription (Status → 'D', soft delete)
+  action ( features : instance ) cancelSubscription result [1] $self;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Static Actions
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // Tạo subscription nhanh với minimal parameters
+  static action createQuickSubscription
+    parameter ZA_DERS_QuickSubscription
+    result [1] $self;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Draft Actions
+  // ─────────────────────────────────────────────────────────────────────────
+  draft action Edit;
+  draft action Activate;
+  draft action Discard;
+  draft action Resume;
+  draft determine action Prepare
+  {
+    validation validateReport;
+    validation validateCompanyCode;
+    validation validateSchedule;
+    validation validateEmail;
+    validation validateReportPermission;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Associations
+  // Note: _JobHistory is NOT in BDEF - it's a separate BO
+  // The CDS association _JobHistory exists for UI navigation only
+  // ─────────────────────────────────────────────────────────────────────────
+  association _Catalog;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Compositions (Child Entities)
+  // ─────────────────────────────────────────────────────────────────────────
+  association _Params { create; with draft; }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Mapping
+  // ─────────────────────────────────────────────────────────────────────────
+  mapping for zders_subscr corresponding
+  {
+    SubscrUuid        = subscr_uuid;
+    UserId            = user_id;
+    SubscrName        = subscr_name;
+    ReportId          = report_id;
+    Bukrs             = bukrs;
+    OutputFormat      = output_format;
+    ParamJson         = param_json;
+    Frequency         = frequency;
+    ExecDay           = exec_day;
+    ExecTime          = exec_time;
+    Tmzone            = tmzone;
+    EmailTo           = email_to;
+    EmailCc           = email_cc;
+    Status            = status;
+    NextRunTs         = next_run_ts;
+    LastRunTs         = last_run_ts;
+    RunCount          = run_count;
+    CreatedBy         = created_by;
+    CreatedAt         = created_at;
+    LastChangedBy     = last_changed_by;
+    LastChangedAt     = last_changed_at;
+    LocalLastChangedAt = local_last_changed_at;
+  }
+
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CHILD ENTITY: Subscription Parameters
+// ═══════════════════════════════════════════════════════════════════════════
+define behavior for ZI_DERS_SubscriptionParam alias SubscriptionParam
+persistent table zders_sub_param
+draft table zders_d_sub_prm
+etag master LocalLastChangedAt
+lock dependent by _Subscription
+authorization dependent by _Subscription
+{
+  // ─────────────────────────────────────────────────────────────────────────
+  // Operations - Child can be updated/deleted, created via parent
+  // ─────────────────────────────────────────────────────────────────────────
+  update;
+  delete;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Field Control - ReadOnly
+  // ─────────────────────────────────────────────────────────────────────────
+  field ( readonly )
+    SubscrUuid,
+    CreatedBy,
+    CreatedAt,
+    LastChangedBy,
+    LastChangedAt,
+    LocalLastChangedAt;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Field Control - Mandatory
+  // ─────────────────────────────────────────────────────────────────────────
+  field ( mandatory )
+    ParamName;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Association to Parent
+  // ─────────────────────────────────────────────────────────────────────────
+  association _Subscription { with draft; }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Mapping
+  // ─────────────────────────────────────────────────────────────────────────
+  mapping for zders_sub_param corresponding
+  {
+    SubscrUuid        = subscr_uuid;
+    ParamSeq          = param_seq;
+    ParamName         = param_name;
+    ParamValue        = param_value;
+    ParamValueFrom    = param_value_from;
+    ParamValueTo      = param_value_to;
+    DataElement       = data_element;
+    IsMandatory       = is_mandatory;
+    DefaultValue      = default_value;
+    CreatedBy         = created_by;
+    CreatedAt         = created_at;
+    LastChangedBy     = last_changed_by;
+    LastChangedAt     = last_changed_at;
+    LocalLastChangedAt = local_last_changed_at;
+  }
+}
+
+// End of Subscription BDEF
+// Note: JobHistory and JobParam are defined in separate BDEF: zi_ders_jobhistory.bdef.asbdef

@@ -1,0 +1,24 @@
+//=============================================================================
+// BEHAVIOR DEFINITION: ZC_DERS_UserPerm (Projection)
+// TYPE: Projection BDEF
+// PURPOSE: Expose ZI_DERS_UserPerm behavior for OData service
+//=============================================================================
+projection;
+strict ( 2 );
+use draft;
+
+define behavior for ZC_DERS_UserPerm alias UserPerm
+{
+  use create;
+  use update;
+  use delete;
+
+  use action Edit;
+  use action Activate;
+  use action Discard;
+  use action Resume;
+  use action Prepare;
+
+  use action deactivate;
+  use action reactivate;
+}

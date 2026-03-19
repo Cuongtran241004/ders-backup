@@ -1,0 +1,5 @@
+@EndUserText.label: 'Service Definition AP Aging Report'
+define service ZUI_DERS_AP03 {
+  expose ZC_DERS_AP03;
+  expose ZC_DERS_AP03_ITEM;
+}

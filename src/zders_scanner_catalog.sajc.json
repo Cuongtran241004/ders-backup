@@ -1,0 +1,8 @@
+{
+  "formatVersion": "1",
+  "header": {
+    "description": "DERS Subscription Scanner",
+    "originalLanguage": "en"
+  },
+  "className": "ZCL_DERS_SUBSCRIPTION_SCANNER"
+}

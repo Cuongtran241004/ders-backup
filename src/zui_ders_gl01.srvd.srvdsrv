@@ -1,0 +1,5 @@
+@EndUserText.label: 'Service Definition GL01'
+define service ZUI_ders_GL01 {
+  expose ZC_DERS_GL01 as Balances;
+  expose ZC_DERS_GL01_ITEM as Details;
+}

@@ -1,0 +1,134 @@
+//=============================================================================
+// BEHAVIOR DEFINITION: ZI_DERS_Export
+// TYPE: Managed WITHOUT Draft (SAD Section 4.5.2)
+// PURPOSE: One-time Export Request - simple create, no draft needed
+// RATIONALE: Users submit export immediately, no need to save incomplete state
+//=============================================================================
+
+managed implementation in class ZBP_I_DERS_EXPORT unique;
+strict ( 2 );
+// NO DRAFT - Export is a simple "create and submit" operation
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ROOT ENTITY: One-time Export Request
+// ═══════════════════════════════════════════════════════════════════════════
+define behavior for ZI_DERS_Export alias Export
+persistent table zders_export
+lock master
+authorization master ( instance )
+etag master LastChangedAt
+
+{
+  // ─────────────────────────────────────────────────────────────────────────
+  // Standard CRUD Operations
+  // Only CREATE allowed - no update/delete after submission
+  // ─────────────────────────────────────────────────────────────────────────
+  create;
+  // allow update for internal determinations and actions, external UI will not expose it
+  update;
+  // NO delete - exports are kept for audit trail
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Field Control - ReadOnly (system-managed fields)
+  // ─────────────────────────────────────────────────────────────────────────
+  field ( readonly )
+    ExportUuid,
+    ExportId,
+    UserId,
+    Status,
+    StatusCriticality,
+    CreatedBy,
+    CreatedAt,
+    LastChangedBy,
+    LastChangedAt,
+    LocalLastChangedAt;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Field Control - Mandatory (user input)
+  // ─────────────────────────────────────────────────────────────────────────
+  field ( mandatory )
+    ReportId,
+    OutputFormat;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Key Numbering - UUID auto-generated
+  // ─────────────────────────────────────────────────────────────────────────
+  field ( numbering : managed )
+    ExportUuid;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Validations - Run before save
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // Validate report exists and is active
+  validation validateReport on save { create;
+    field ReportId; }
+
+  // Validate format is supported by the report
+  validation validateFormat on save { create;
+    field OutputFormat; }
+
+  // Validate email if SendEmail is true
+  validation validateEmail on save { create;
+    field EmailTo, SendEmail; }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Determinations - Auto-fill values
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // Set default values (Status='N' New, OutputFormat='XLSX')
+  determination setDefaults on modify { create; }
+
+  // Set UserId = sy-uname automatically
+  determination setUserId on modify { create; }
+
+  // Generate ExportId = EXP-YYYYMMDD-NNNN
+  determination generateExportId on save { create; }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Instance Actions
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // Execute export - triggers background job
+  // Precondition: Status = 'N' (New)
+  action ( features : instance ) execute result [1] $self;
+
+  // Cancel export request
+  // Precondition: Status IN ('N', 'Q') - New or Queued
+  action ( features : instance ) cancel result [1] $self;
+
+  // Download generated file
+  // Precondition: Status = 'C' (Completed) AND FileUuid IS NOT INITIAL
+  action ( features : instance ) download result [1] $self;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // NO DRAFT ACTIONS - Export is immediate submission
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Associations (read-only references)
+  // ─────────────────────────────────────────────────────────────────────────
+  association _Catalog;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Mapping: CDS Field → Database Column
+  // ─────────────────────────────────────────────────────────────────────────
+  mapping for zders_export corresponding
+  {
+    ExportUuid        = export_uuid;
+    ExportId          = export_id;
+    UserId            = user_id;
+    ReportId          = report_id;
+    OutputFormat      = output_format;
+    ParamJson         = param_json;
+    Status            = status;
+    SendEmail         = send_email;
+    EmailTo           = email_to;
+    EmailCc           = email_cc;
+    CreatedBy         = created_by;
+    CreatedAt         = created_at;
+    LastChangedBy     = last_changed_by;
+    LastChangedAt     = last_changed_at;
+    LocalLastChangedAt = local_last_changed_at;
+  }
+}

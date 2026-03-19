@@ -1,0 +1,56 @@
+@Metadata.layer: #CORE
+@UI: {
+  headerInfo: { 
+    typeName: 'Customer Debt', 
+    typeNamePlural: 'Customer Debts',
+    title: { type: #STANDARD, value: 'CustomerName' }
+  }
+}
+annotate view ZC_DERS_AR01 with 
+{
+  /* Vùng Facet - Giữ nguyên */
+  @UI.facet: [
+    { id: 'GeneralInfo', 
+      type: #IDENTIFICATION_REFERENCE, // Lỗi nằm ở đây nếu thiếu @UI.identification bên dưới
+      label: 'Summary', 
+      position: 10 },
+      
+    { id: 'Details', 
+      type: #LINEITEM_REFERENCE, 
+      label: 'Invoice Details', 
+      position: 20, 
+      targetElement: '_Items' }
+  ]
+
+  @UI: { lineItem:       [{ position: 10 }], 
+         selectionField: [{ position: 10 }],
+         identification: [{ position: 10 }] }
+  @EndUserText.label: 'Ledger'       
+  Ledger;
+
+  @UI: { lineItem:       [{ position: 20 }], 
+         selectionField: [{ position: 20 }],
+         identification: [{ position: 20 }] }
+  @EndUserText.label: 'Company Code'              
+  CompanyCode;
+
+  @UI: { lineItem:       [{ position: 30 }], 
+         selectionField: [{ position: 30 }],
+         identification: [{ position: 30 }] }
+  @EndUserText.label: 'Customer ID '               
+  Customer;
+
+  @UI: { lineItem:       [{ position: 40 }],
+         identification: [{ position: 40 }] }
+  @EndUserText.label: 'Customer Name'       
+  CustomerName;
+
+  @UI: { lineItem:       [{ position: 50 }],
+         identification: [{ position: 50 }] }
+  @EndUserText.label: 'Total Open Amount'
+  TotalOpenAmount;
+
+  @UI.lineItem: [{ position: 60 }]
+  @EndUserText.label: 'Maximum Days Overdue'
+  MaxDaysOverdue;
+}

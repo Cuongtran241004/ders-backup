@@ -1,0 +1,8 @@
+unmanaged implementation in class zbp_i_vendoropenitem unique;
+
+define behavior for ZI_VENDOROPENITEM alias VendorOpenItem
+{
+ static action ExportExcel
+  parameter ZPARA_ap01
+  result [0..1] ZC_ExcelStore;
+}

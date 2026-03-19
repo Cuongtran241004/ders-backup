@@ -1,0 +1,11 @@
+//=============================================================================
+// ACCESS CONTROL: ZI_DERS_JobHistory
+// PURPOSE: Row-level security by Company Code
+//=============================================================================
+@EndUserText.label: 'Access Control for Job History'
+@MappingRole: true
+define role ZI_DERS_JOBHISTORY {
+  grant select on ZI_DERS_JobHistory
+  where ( Bukrs ) = 
+    aspect pfcg_auth( ZDERSCOMP, BUKRS, ACTVT = '03' );
+}

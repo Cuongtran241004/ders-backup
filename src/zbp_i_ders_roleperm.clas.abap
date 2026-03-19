@@ -1,0 +1,5 @@
+CLASS zbp_i_ders_roleperm DEFINITION PUBLIC ABSTRACT FINAL FOR BEHAVIOR OF zi_ders_roleperm.
+ENDCLASS.
+
+CLASS zbp_i_ders_roleperm IMPLEMENTATION.
+ENDCLASS.

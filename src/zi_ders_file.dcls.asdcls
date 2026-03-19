@@ -1,0 +1,17 @@
+//=============================================================================
+// ACCESS CONTROL: ZI_DERS_File
+// PURPOSE: Row-level security by Company Code
+// AUTHORIZATION: Checks ZDERS_COMP with Activity 03 (Display)
+//
+// NOTE: File records contain generated report files.
+//       Row filtering ensures users only see files for their
+//       authorized company codes.
+//       Bukrs is accessed through association to JobHistory.
+//=============================================================================
+@EndUserText.label: 'Access Control for File'
+@MappingRole: true
+define role ZI_DERS_FILE {
+  grant select on ZI_DERS_File
+  where ( _JobHistory.Bukrs ) = 
+    aspect pfcg_auth( ZDERSCOMP, BUKRS, ACTVT = '03' );
+}

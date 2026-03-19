@@ -1,0 +1,9 @@
+projection;
+
+
+define behavior for ZC_DERS_AR03_V2 alias AgingReport
+
+{
+  use action calculateAging;
+
+}

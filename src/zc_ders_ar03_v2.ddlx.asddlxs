@@ -1,0 +1,75 @@
+@Metadata.layer: #CUSTOMER
+@UI: {
+  headerInfo: {
+    typeName: 'Aging Report',
+    typeNamePlural: 'Aging Reports',
+    title: { type: #STANDARD, value: 'CustomerName' }
+  }
+}
+annotate view ZC_DERS_AR03_V2 with
+{
+  /* ----------------------------------------------------------- */
+  /* FACETS: Định nghĩa khu vực hiển thị dữ liệu                 */
+  /* ----------------------------------------------------------- */
+  @UI.facet: [
+    {
+      id: 'idIdentification',
+      type: #IDENTIFICATION_REFERENCE,
+      label: 'General Information',
+      position: 10
+    },
+    {
+      id: 'idLineItem',
+      type: #LINEITEM_REFERENCE,
+      label: 'Aging Details',
+      position: 20
+    }
+  ]
+
+  /* ----------------------------------------------------------- */
+  /* FIELDS & ACTIONS                                            */
+  /* ----------------------------------------------------------- */
+
+  @UI.lineItem: [
+    { position: 10, label: 'Company Code' },
+    /* ĐƯA ACTION LÊN TOOLBAR (Header) */
+    /* dataAction phải khớp chính xác với tên trong BDEF */
+    { 
+      type: #FOR_ACTION, 
+      dataAction: 'calculateAging', 
+      label: 'Run Aging Analysis', 
+      position: 10,
+      invocationGrouping: #CHANGE_SET 
+    }
+  ]
+  @UI.selectionField: [{ position: 10 }]
+  CompanyCode;
+
+  @UI.lineItem: [{ position: 20, label: 'Customer' }]
+  @UI.selectionField: [{ position: 20 }]
+  Customer;
+
+  @UI.lineItem: [{ position: 30, label: 'Customer Name' }]
+  CustomerName;
+
+  @UI.lineItem: [{ position: 40, label: 'Total Amount' }]
+  OriginalAmount;
+
+  @UI.lineItem: [{ position: 50, label: 'Not Due' }]
+  Bucket_NotDue;
+
+  @UI.lineItem: [{ position: 60, label: '0-30 Days' }]
+  Bucket_0_30;
+
+  @UI.lineItem: [{ position: 70, label: '31-60 Days' }]
+  Bucket_31_60;
+
+  @UI.lineItem: [{ position: 80, label: '61-90 Days' }]
+  Bucket_61_90;
+
+  @UI.lineItem: [{ position: 90, label: 'Over 90 Days' }]
+  Bucket_Over_90;
+
+  @UI.hidden: true
+  LocalCurrency;
+}

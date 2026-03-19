@@ -1,0 +1,27 @@
+@Metadata.layer: #CORE
+annotate view ZC_DERS_AR01_ITEM with 
+{
+  @UI.lineItem: [{ position: 10 }]
+  @EndUserText.label: 'Accounting Document'       
+  AccountingDocument;
+
+  @UI.lineItem: [{ position: 20 }]
+  @EndUserText.label: 'Fiscal Year'       
+  FiscalYear;
+
+  @UI.lineItem: [{ position: 30 }]
+  @EndUserText.label: 'Posting Date'       
+  PostingDate;
+
+  @UI.lineItem: [{ position: 40 }]
+  @EndUserText.label: 'Net Due Date'       
+  NetDueDate;
+
+  @UI.lineItem: [{ position: 50 }]
+  @EndUserText.label: 'Open Amount'       
+  OpenAmount;
+
+  @UI.lineItem: [{ position: 60 }]
+  @EndUserText.label: 'Days Overdue'       
+  DaysOverdue;
+}

@@ -1,0 +1,18 @@
+//=============================================================================
+// ACCESS CONTROL: ZI_DERS_UserPerm
+// PURPOSE: Filter user permissions by company code authorization
+//
+// RATIONALE:
+// - Global Admins (F_BKPF_BUK = *) can see all user permissions
+// - Company Admins see only permissions for their company codes
+// - This ensures Company Admins cannot manage permissions outside their scope
+//
+// NOTE: Write operations (CRUD) are additionally controlled by BDEF
+//   global authorization using Z_DERS_ADM auth object
+//=============================================================================
+@EndUserText.label: 'Access Control for User Permissions'
+@MappingRole: true
+define role ZI_DERS_USERPERM {
+  grant select on ZI_DERS_UserPerm
+  where (Bukrs) = aspect pfcg_auth (F_BKPF_BUK, BUKRS, ACTVT = '03');
+}

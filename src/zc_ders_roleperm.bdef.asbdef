@@ -1,0 +1,40 @@
+//=============================================================================
+// BEHAVIOR DEFINITION: ZC_DERS_RolePerm (Projection Layer)
+// TYPE: Projection with Draft
+// PURPOSE: Role permission management UI - Admin only
+//
+// BASE: ZI_DERS_RolePerm
+//=============================================================================
+projection;
+strict ( 2 );
+use draft;
+
+define behavior for ZC_DERS_RolePerm alias RolePerm
+{
+  //═══════════════════════════════════════════════════════════════════════════
+  // STANDARD OPERATIONS (from interface)
+  //═══════════════════════════════════════════════════════════════════════════
+  use create;
+  use update;
+  use delete;
+
+  //═══════════════════════════════════════════════════════════════════════════
+  // DRAFT ACTIONS
+  //═══════════════════════════════════════════════════════════════════════════
+  use action Edit;
+  use action Activate;
+  use action Discard;
+  use action Resume;
+  use action Prepare;
+
+  //═══════════════════════════════════════════════════════════════════════════
+  // CUSTOM ACTIONS
+  //═══════════════════════════════════════════════════════════════════════════
+  use action deactivate;
+  use action reactivate;
+
+  //═══════════════════════════════════════════════════════════════════════════
+  // ASSOCIATIONS
+  //═══════════════════════════════════════════════════════════════════════════
+  use association _Catalog { with draft; }
+}

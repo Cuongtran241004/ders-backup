@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<abapGit version="v1.0.0" serializer="LCL_OBJECT_SUSO" serializer_version="v1.0.0">
+ <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
+  <asx:values>
+   <TOBJ>
+    <OBJCT>ZDERS_COMP</OBJCT>
+    <OCLSS>ZDER</OCLSS>
+   </TOBJ>
+   <TOBJT>
+    <LANGU>E</LANGU>
+    <OBJECT>ZDERS_COMP</OBJECT>
+    <TTEXT>DERS Company Code Authorization</TTEXT>
+   </TOBJT>
+   <TOBJVORFLG>
+    <OBJCT>ZDERS_COMP</OBJCT>
+    <FLAG3>N</FLAG3>
+    <FLAG4>A</FLAG4>
+    <FLAG5>A</FLAG5>
+   </TOBJVORFLG>
+  </asx:values>
+ </asx:abap>
+</abapGit>

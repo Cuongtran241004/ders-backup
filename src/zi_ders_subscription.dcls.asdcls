@@ -1,0 +1,12 @@
+//=============================================================================
+// ACCESS CONTROL: ZI_DERS_Subscription
+// PURPOSE: Row-level security by Company Code
+// AUTHORIZATION: Checks ZDERS_COMP with Activity 03 (Display)
+//=============================================================================
+@EndUserText.label: 'Access Control for Subscription'
+@MappingRole: true
+define role ZI_DERS_SUBSCRIPTION {
+  grant select on ZI_DERS_Subscription
+  where ( Bukrs ) = 
+    aspect pfcg_auth( ZDERSCOMP, BUKRS, ACTVT = '03' );
+}

@@ -1,0 +1,5 @@
+CLASS zbp_i_vendoropenitem DEFINITION PUBLIC ABSTRACT FINAL FOR BEHAVIOR OF zi_vendoropenitem.
+ENDCLASS.
+
+CLASS zbp_i_vendoropenitem IMPLEMENTATION.
+ENDCLASS.

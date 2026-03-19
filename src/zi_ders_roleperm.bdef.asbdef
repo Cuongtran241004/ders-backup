@@ -1,0 +1,88 @@
+//=============================================================================
+// BEHAVIOR DEFINITION: ZI_DERS_RolePerm (Interface Layer)
+// TYPE: Managed with Draft
+// PURPOSE: Role-to-Report permission mapping (Admin only)
+//
+// AUTHORIZATION: Z_DERS_ADM (global check)
+// ENTITY: RolePerm (root)
+// PREREQUISITES: Draft table ZDERS_D_ROLPERM must exist
+//=============================================================================
+managed implementation in class zbp_i_ders_roleperm unique;
+strict ( 2 );
+with draft;
+
+define behavior for ZI_DERS_RolePerm alias RolePerm
+persistent table zders_role_perm
+draft table zders_d_rolperm
+lock master total etag ChangedAt
+authorization master ( global )
+etag master ChangedAt
+{
+  //═══════════════════════════════════════════════════════════════════════════
+  // KEY FIELDS
+  //═══════════════════════════════════════════════════════════════════════════
+  field ( mandatory ) BusinessRole, ReportId;
+
+  //═══════════════════════════════════════════════════════════════════════════
+  // ADMINISTRATIVE FIELDS (System-managed)
+  //═══════════════════════════════════════════════════════════════════════════
+  field ( readonly ) CreatedBy, CreatedAt, ChangedBy, ChangedAt;
+  field ( readonly ) StatusCriticality;
+
+  //═══════════════════════════════════════════════════════════════════════════
+  // STANDARD OPERATIONS
+  //═══════════════════════════════════════════════════════════════════════════
+  create;
+  update;
+  delete;
+
+  //═══════════════════════════════════════════════════════════════════════════
+  // DRAFT ACTIONS
+  //═══════════════════════════════════════════════════════════════════════════
+  draft action Edit;
+  draft action Activate;
+  draft action Discard;
+  draft action Resume;
+  draft determine action Prepare
+  {
+    validation validateReportExists;
+  }
+
+  //═══════════════════════════════════════════════════════════════════════════
+  // CUSTOM ACTIONS
+  //═══════════════════════════════════════════════════════════════════════════
+  action ( features : instance ) deactivate result [1] $self;
+  action ( features : instance ) reactivate result [1] $self;
+
+  //═══════════════════════════════════════════════════════════════════════════
+  // DETERMINATIONS
+  //═══════════════════════════════════════════════════════════════════════════
+  determination setDefaults on modify { create; }
+
+  //═══════════════════════════════════════════════════════════════════════════
+  // VALIDATIONS
+  //═══════════════════════════════════════════════════════════════════════════
+  validation validateReportExists on save { field ReportId; }
+
+  //═══════════════════════════════════════════════════════════════════════════
+  // ASSOCIATIONS
+  //═══════════════════════════════════════════════════════════════════════════
+  association _Catalog { with draft; }
+
+  //═══════════════════════════════════════════════════════════════════════════
+  // MAPPING
+  //═══════════════════════════════════════════════════════════════════════════
+  mapping for zders_role_perm corresponding
+  {
+    BusinessRole  = business_role;
+    ReportId      = report_id;
+    CanExport     = can_export;
+    CanSubscribe  = can_subscribe;
+    IsDefault     = is_default;
+    IsActive      = is_active;
+    CreatedBy     = created_by;
+    CreatedAt     = created_at;
+    ChangedBy     = changed_by;
+    ChangedAt     = changed_at;
+  }
+}

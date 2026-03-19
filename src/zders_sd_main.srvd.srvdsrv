@@ -1,0 +1,23 @@
+@EndUserText.label: 'DERS Main Service Definition'
+define service ZDERS_SD_MAIN {
+  expose ZC_DERS_Catalog as ReportCatalog;
+  expose ZC_DERS_Parameter as ReportParameters;
+  expose ZC_DERS_Catalog_ForUser as CatalogForUser;
+  expose ZC_DERS_Subscription as Subscriptions;
+  expose ZC_DERS_SubscriptionParam as SubscriptionParameters;
+  expose ZC_DERS_Export as Exports;
+  expose ZC_DERS_JobHistory as JobHistory;
+  expose ZC_DERS_JobParam as JobParameters;
+  expose ZC_DERS_File as Files;
+  expose ZC_DERS_UserAssign as UserAssignments;
+  expose ZC_DERS_UserPerm as UserPermissions;
+  expose ZC_DERS_RolePerm as RolePermissions;
+  expose ZVH_DERS_Module as ModuleVH;
+  expose ZVH_DERS_Format as FormatVH;
+  expose ZVH_DERS_Frequency as FrequencyVH;
+  expose ZVH_DERS_Status as StatusVH;
+  expose ZVH_DERS_JobStatus as JobStatusVH;
+  expose ZVH_DERS_Catalog as CatalogVH;
+  expose I_CompanyCodeStdVH as CompanyCodeVH;
+  expose I_Currency as CurrencyVH;
+}

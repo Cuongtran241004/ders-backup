@@ -1,0 +1,4 @@
+@EndUserText.label: 'Job History Service Definition'
+define service ZUI_DERS_JOBHISTORY {
+  expose ZC_DERS_JobHistory;
+}

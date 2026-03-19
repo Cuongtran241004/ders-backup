@@ -1,0 +1,5 @@
+CLASS zbp_i_ders_jobhistory DEFINITION PUBLIC ABSTRACT FINAL FOR BEHAVIOR OF zi_ders_jobhistory.
+ENDCLASS.
+
+CLASS zbp_i_ders_jobhistory IMPLEMENTATION.
+ENDCLASS.

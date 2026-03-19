@@ -1,0 +1,22 @@
+//=============================================================================
+// ACCESS CONTROL: ZI_DERS_Export
+// PURPOSE: No DCL-based filtering (handled by BDEF authorization)
+//
+// NOTE: Export records are one-time exports created by users.
+//       Authorization is handled at BDEF level via get_instance_authorizations
+//       which checks:
+//       - Ownership: UserId = sy-uname → full access
+//       - Admin: ZDERS_COMP authorization → admin access
+//
+//       DCL not used because:
+//       - Export has no Bukrs field (only in param_json)
+//       - Ownership filtering cannot be expressed in DCL syntax
+//       - BDEF instance auth provides sufficient row-level security
+//
+// CDS ANNOTATION: @AccessControl.authorizationCheck: #NOT_REQUIRED
+//=============================================================================
+@EndUserText.label: 'Access Control for Export - Handled by BDEF'
+@MappingRole: true
+define role ZI_DERS_EXPORT {
+  grant select on ZI_DERS_Export;
+}

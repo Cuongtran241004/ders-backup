@@ -1,0 +1,75 @@
+//=============================================================================
+// PROJECTION BEHAVIOR DEFINITION: ZC_DERS_Subscription
+// TYPE: Projection Behavior (for Subscription BO only)
+// PURPOSE: UI-specific behavior for Subscriptions
+//
+// NOTE: JobHistory/JobParam/File are in separate BO (ZI_DERS_JobHistory)
+//       and have their own projection BDEF (ZC_DERS_JobHistory.bdef)
+//
+// ACTIVATION ORDER:
+//   1. First activate: ZC_DERS_SubscriptionParam (projection CDS)
+//   2. Then activate: This BDEF with child behavior uncommented
+//=============================================================================
+
+projection;
+strict ( 2 );
+use draft;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PROJECTION: Subscriptions (Managed + Draft)
+// ═══════════════════════════════════════════════════════════════════════════
+define behavior for ZC_DERS_Subscription alias Subscription
+{
+  // ─────────────────────────────────────────────────────────────────────────
+  // Standard Operations
+  // ─────────────────────────────────────────────────────────────────────────
+  use create;
+  use update;
+  use delete;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Instance Actions (must match base BDEF action names)
+  // ─────────────────────────────────────────────────────────────────────────
+  use action pause;
+  use action resumeSubscription;
+  use action executeNow;
+  use action cancelSubscription;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Static Actions
+  // ─────────────────────────────────────────────────────────────────────────
+  use action createQuickSubscription;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Draft Actions
+  // ─────────────────────────────────────────────────────────────────────────
+  use action Edit;
+  use action Activate;
+  use action Discard;
+  use action Resume;
+  use action Prepare;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Associations
+  // Note: _JobHistory is separate BO - not projected here
+  //       UI navigation via CDS association only
+  // ─────────────────────────────────────────────────────────────────────────
+  use association _Catalog;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Compositions (Child Entities)
+  // ─────────────────────────────────────────────────────────────────────────
+  use association _Params { create; with draft; }
+
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PROJECTION: Subscription Parameters (Child Entity)
+// NOTE: Activate ZC_DERS_SubscriptionParam CDS first, then uncomment below
+// ═══════════════════════════════════════════════════════════════════════════
+define behavior for ZC_DERS_SubscriptionParam alias SubscriptionParam
+{
+  use update;
+  use delete;
+  use association _Subscription { with draft; }
+}

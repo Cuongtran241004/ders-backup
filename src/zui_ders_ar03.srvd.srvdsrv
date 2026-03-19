@@ -1,0 +1,5 @@
+@EndUserText.label: 'Service Definition AR 03'
+define service ZUI_DERS_AR03 {
+  expose ZC_DERS_AR03;
+  expose ZC_DERS_AR03_ITEM;
+}

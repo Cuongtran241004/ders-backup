@@ -1,0 +1,25 @@
+//=============================================================================
+// BEHAVIOR DEFINITION: ZC_DERS_UserAssign (Projection)
+// TYPE: Projection BDEF
+// PURPOSE: Expose ZI_DERS_UserAssign behavior for OData service
+//=============================================================================
+projection;
+strict ( 2 );
+use draft;
+
+define behavior for ZC_DERS_UserAssign alias UserAssign
+{
+  use create;
+  use update;
+  use delete;
+
+  use action Edit;
+  use action Activate;
+  use action Discard;
+  use action Resume;
+  use action Prepare;
+
+  use action deactivate;
+  use action reactivate;
+  use action generatePermissions;
+}
